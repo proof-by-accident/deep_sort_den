@@ -4,13 +4,12 @@ import errno
 import argparse
 import numpy as np
 import cv2
-import tensorflow.compat as tf_compat
-import tensorflow.io as tf_io
-import tensorflow.nest as tf_nest
-from tensorflow import Tensor, convert_to_tensor, import_graph_def
+import tensorflow.compat as tf.compat
+import tensorflow.io as tf.io
+import tensorflow.nest as tf.nest
 
 
-def _run_in_batches(f: callable, data: Tensor, out: str, batch_size: int):
+def _run_in_batches(f: callable, data: tf.Tensor, out: str, batch_size: int):
     data_len = len(out)
     num_batches = int(data_len / batch_size)
 
@@ -77,13 +76,13 @@ def wrap_frozen_graph(graph_def, inputs, outputs):
     """
 
     def _imports_graph_def():
-        tf_compat.v1.import_graph_def(graph_def, name="")
+        tf.compat.v1.lite.import_graph_def(graph_def, name="")
 
-    wrapped_import = tf_compat.v1.wrap_function(_imports_graph_def, [])
+    wrapped_import = tf.compat.v1.wrap_function(_imports_graph_def, [])
     import_graph = wrapped_import.graph
     return wrapped_import.prune(
-        tf_nest.map_structure(import_graph.as_graph_element, inputs),
-        tf_nest.map_structure(import_graph.as_graph_element, outputs),
+        tf.nest.map_structure(import_graph.as_graph_element, inputs),
+        tf.nest.map_structure(import_graph.as_graph_element, outputs),
     )
 
 
@@ -92,15 +91,15 @@ class ImageEncoder(object):
         self, checkpoint_filename, input_name="images", output_name="features"
     ):
 
-        with tf_io.gfile.GFile(checkpoint_filename, "rb") as file_handle:
-            graph_def = tf_compat.v1.GraphDef()
+        with tf.io.gfile.GFile(checkpoint_filename, "rb") as file_handle:
+            graph_def = tf.compat.v1.GraphDef()
             graph_def.ParseFromString(file_handle.read())
-        import_graph_def(graph_def, name="net")
+        tf.import_graph_def(graph_def, name="net")
 
-        self.input_var = tf_compat.v1.get_default_graph().get_tensor_by_name(
+        self.input_var = tf.compat.v1.get_default_graph().get_tensor_by_name(
             f"{input_name}:0"
         )
-        self.output_var = tf_compat.v1.get_default_graph().get_tensor_by_name(
+        self.output_var = tf.compat.v1.get_default_graph().get_tensor_by_name(
             f"{output_name}:0"
         )
         assert len(self.output_var.get_shape()) == 2
@@ -114,7 +113,7 @@ class ImageEncoder(object):
 
     def __call__(self, data_x, batch_size=32):
         if isinstance(data_x, np.ndarray):
-            data_x = convert_to_tensor(data_x)
+            data_x = tf.convert_to_tensor(data_x)
         out = np.zeros((len(data_x), self.feature_dim), np.float32)
         _run_in_batches(self.graph_function, data_x, out, batch_size)
         return out

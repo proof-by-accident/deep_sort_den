@@ -4,9 +4,7 @@ import errno
 import argparse
 import numpy as np
 import cv2
-import tensorflow.compat as tf.compat
-import tensorflow.io as tf.io
-import tensorflow.nest as tf.nest
+import tensorflow as tf
 
 
 def _run_in_batches(f: callable, data: tf.Tensor, out: str, batch_size: int):

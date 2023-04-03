@@ -4,11 +4,14 @@ import errno
 import argparse
 import numpy as np
 import cv2
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.io as tf_io
+import tensorflow.nest as tf_nest
+from tensorflow import Tensor, graph_util, import_graph_def, convert_to_tensor
 import tflite_runtime.interpreter as tflite
 
 
-def _run_in_batches(f: callable, data: tf.Tensor, out: str, batch_size: int):
+def _run_in_batches(f: callable, data: Tensor, out: str, batch_size: int):
     data_len = len(out)
     num_batches = int(data_len / batch_size)
 
@@ -76,13 +79,17 @@ def wrap_frozen_graph(graph_def, inputs, outputs):
 
     def _imports_graph_def():
         # tflite.lite.import_graph_def(graph_def, name="")
+<<<<<<< HEAD
         tf.graph_util.import_graph_def(graph_def, name="")
+=======
+        graph_util.import_graph_def(graph_def, name="")
+>>>>>>> a5e0706 (testing tflite swtich)
 
     wrapped_import = tflite.wrap_function(_imports_graph_def, [])
     import_graph = wrapped_import.graph
     return wrapped_import.prune(
-        tf.nest.map_structure(import_graph.as_graph_element, inputs),
-        tf.nest.map_structure(import_graph.as_graph_element, outputs),
+        tf_nest.map_structure(import_graph.as_graph_element, inputs),
+        tf_nest.map_structure(import_graph.as_graph_element, outputs),
     )
 
 
@@ -91,10 +98,14 @@ class ImageEncoder(object):
         self, checkpoint_filename, input_name="images", output_name="features"
     ):
 
+<<<<<<< HEAD
         with tf.io.gfile.GFile(checkpoint_filename, "rb") as file_handle:
+=======
+        with tf_io.gfile.GFile(checkpoint_filename, "rb") as file_handle:
+>>>>>>> a5e0706 (testing tflite swtich)
             graph_def = tflite.GraphDef()
             graph_def.ParseFromString(file_handle.read())
-        tf.import_graph_def(graph_def, name="net")
+        import_graph_def(graph_def, name="net")
 
         self.input_var = tflite.get_default_graph().get_tensor_by_name(
             f"{input_name}:0"
@@ -113,7 +124,7 @@ class ImageEncoder(object):
 
     def __call__(self, data_x, batch_size=32):
         if isinstance(data_x, np.ndarray):
-            data_x = tf.convert_to_tensor(data_x)
+            data_x = convert_to_tensor(data_x)
         out = np.zeros((len(data_x), self.feature_dim), np.float32)
         _run_in_batches(self.graph_function, data_x, out, batch_size)
         return out

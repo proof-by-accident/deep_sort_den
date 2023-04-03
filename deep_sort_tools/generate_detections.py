@@ -4,6 +4,7 @@ import errno
 import argparse
 import numpy as np
 import cv2
+
 # import tensorflow as tf
 import tensorflow.io as tf_io
 import tensorflow.nest as tf_nest
@@ -79,11 +80,8 @@ def wrap_frozen_graph(graph_def, inputs, outputs):
 
     def _imports_graph_def():
         # tflite.lite.import_graph_def(graph_def, name="")
-<<<<<<< HEAD
         tf.graph_util.import_graph_def(graph_def, name="")
-=======
         graph_util.import_graph_def(graph_def, name="")
->>>>>>> a5e0706 (testing tflite swtich)
 
     wrapped_import = tflite.wrap_function(_imports_graph_def, [])
     import_graph = wrapped_import.graph
@@ -98,11 +96,7 @@ class ImageEncoder(object):
         self, checkpoint_filename, input_name="images", output_name="features"
     ):
 
-<<<<<<< HEAD
-        with tf.io.gfile.GFile(checkpoint_filename, "rb") as file_handle:
-=======
         with tf_io.gfile.GFile(checkpoint_filename, "rb") as file_handle:
->>>>>>> a5e0706 (testing tflite swtich)
             graph_def = tflite.GraphDef()
             graph_def.ParseFromString(file_handle.read())
         import_graph_def(graph_def, name="net")

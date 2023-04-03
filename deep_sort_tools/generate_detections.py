@@ -6,8 +6,8 @@ import numpy as np
 import cv2
 
 # import tensorflow as tf
-import tensorflow.io as tf_io
-import tensorflow.nest as tf_nest
+from tensorflow import io as tf_io
+from tensorflow import nest as tf_nest
 from tensorflow import Tensor, graph_util, import_graph_def, convert_to_tensor
 import tflite_runtime.interpreter as tflite
 

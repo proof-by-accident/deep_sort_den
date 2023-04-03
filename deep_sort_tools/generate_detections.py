@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 import cv2
 import tensorflow as tf
+import tflite_runtime.interpreter as tflite
 
 
 def _run_in_batches(f: callable, data: tf.Tensor, out: str, batch_size: int):
@@ -74,10 +75,10 @@ def wrap_frozen_graph(graph_def, inputs, outputs):
     """
 
     def _imports_graph_def():
-        # tf.compat.v1.lite.import_graph_def(graph_def, name="")
+        # tflite.lite.import_graph_def(graph_def, name="")
         tf.graph_util.import_graph_def(graph_def, name="")
 
-    wrapped_import = tf.compat.v1.wrap_function(_imports_graph_def, [])
+    wrapped_import = tflite.wrap_function(_imports_graph_def, [])
     import_graph = wrapped_import.graph
     return wrapped_import.prune(
         tf.nest.map_structure(import_graph.as_graph_element, inputs),
@@ -91,14 +92,14 @@ class ImageEncoder(object):
     ):
 
         with tf.io.gfile.GFile(checkpoint_filename, "rb") as file_handle:
-            graph_def = tf.compat.v1.GraphDef()
+            graph_def = tflite.GraphDef()
             graph_def.ParseFromString(file_handle.read())
         tf.import_graph_def(graph_def, name="net")
 
-        self.input_var = tf.compat.v1.get_default_graph().get_tensor_by_name(
+        self.input_var = tflite.get_default_graph().get_tensor_by_name(
             f"{input_name}:0"
         )
-        self.output_var = tf.compat.v1.get_default_graph().get_tensor_by_name(
+        self.output_var = tflite.get_default_graph().get_tensor_by_name(
             f"{output_name}:0"
         )
         assert len(self.output_var.get_shape()) == 2
